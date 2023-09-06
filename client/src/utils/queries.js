@@ -1,21 +1,34 @@
 import { gql } from '@apollo/client';
 
-// Define your GraphQL query for fetching the current user
 export const GET_ME = gql`
-  query {
-    me {
+  query me($token: String) {
+    me(token: $token) {
       _id
       username
       email
-      bookCount
       savedBooks {
-        bookId
-        authors
-        description
-        title
-        image
-        link
+        // Include the fields you need here
       }
     }
   }
 `;
+
+export const REMOVE_BOOK = gql`
+  mutation removeBook($bookId: ID!) {
+    removeBook(bookId: $bookId) {
+      user {
+        _id
+        username
+        email
+        savedBooks {
+          // Include the fields you need here
+        }
+      }
+    }
+  }
+`;
+
+
+
+
+
