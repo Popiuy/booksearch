@@ -1,34 +1,21 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'
 
 export const GET_ME = gql`
-  query me($token: String) {
-    me(token: $token) {
-      _id
-      username
-      email
-      savedBooks {
-        // Include the fields you need here
-      }
-    }
-  }
-`;
-
-export const REMOVE_BOOK = gql`
-  mutation removeBook($bookId: ID!) {
-    removeBook(bookId: $bookId) {
-      user {
+    query Me {
+        me {
         _id
         username
         email
+        password
+        bookCount
         savedBooks {
-          // Include the fields you need here
+            bookId
+            authors
+            title
+            description
+            image
+            link
         }
-      }
+        }
     }
-  }
-`;
-
-
-
-
-
+`

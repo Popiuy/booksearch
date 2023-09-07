@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Col,
@@ -9,32 +9,23 @@ import {
 } from 'react-bootstrap';
 
 import Auth from '../utils/auth';
-import { searchGoogleBooks } from '../utils/API';
-import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
+import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import { useMutation } from '@apollo/client';
-import { SAVE_BOOK, GET_ME } from '../utils/';
+
+import { SAVE_BOOK } from '../utils/mutations'
 
 const SearchBooks = () => {
-  // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
-  // create state for holding our search field data
   const [searchInput, setSearchInput] = useState('');
 
-  // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  const [ saveNewBook, {error, data} ] = useMutation(SAVE_BOOK);
 
-  // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
-  // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   });
 
-  const [saveBookMutation] = useMutation(SAVE_BOOK, {
-    // Refetch the user's data after a successful saveBook mutation
-    refetchQueries: [{ query: GET_ME }],
-  });
-  
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
     event.preventDefault();
@@ -43,9 +34,14 @@ const SearchBooks = () => {
       return false;
     }
 
+    const searchGoogleBooks = (query) => {
+      return fetch(`https://www.googleapis.com/books/v1/volumes?key=AIzaSyDaIZuOAS8BuBGbPCoYcEKpK-WJF4yt-Vw&q=${query}`);
+    };
+    
+
     try {
       const response = await searchGoogleBooks(searchInput);
-
+      // console.log(response);
       if (!response.ok) {
         throw new Error('something went wrong!');
       }
@@ -59,7 +55,7 @@ const SearchBooks = () => {
         description: book.volumeInfo.description,
         image: book.volumeInfo.imageLinks?.thumbnail || '',
       }));
-
+      // console.log(bookData)
       setSearchedBooks(bookData);
       setSearchInput('');
     } catch (err) {
@@ -69,6 +65,7 @@ const SearchBooks = () => {
 
   // create function to handle saving a book to our database
   const handleSaveBook = async (bookId) => {
+
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
 
@@ -78,26 +75,23 @@ const SearchBooks = () => {
     if (!token) {
       return false;
     }
-
+    
     try {
-      const { response } = await saveBookMutation({
-        variables: { input: bookToSave }, 
-      });
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      // if book successfully saves to user's account, save book id to state
+      // execute save book mutation
+      const response = await saveNewBook({variables: {input: bookToSave}});
+      // add saved book to state variable to change the 'save' button on the page
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+      console.log(response);
     } catch (err) {
       console.error(err);
     }
+
   };
 
+  
   return (
     <>
-      <div className="text-light bg-dark p-5">
+      <div className='text-light bg-dark pt-5'>
         <Container>
           <h1>Search for Books!</h1>
           <Form onSubmit={handleFormSubmit}>
@@ -131,7 +125,7 @@ const SearchBooks = () => {
         <Row>
           {searchedBooks.map((book) => {
             return (
-              <Col md="4" key={book.bookId}>
+              <Col key={book.bookId} md="4">
                 <Card border='dark'>
                   {book.image ? (
                     <Card.Img src={book.image} alt={`The cover for ${book.title}`} variant='top' />

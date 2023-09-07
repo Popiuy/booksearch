@@ -1,66 +1,43 @@
 import { gql } from '@apollo/client';
 
-// Define your GraphQL mutations for user actions
-export const LOGIN_USER = gql`
-  mutation login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-      user {
-        _id
-        username
-        email
-      }
+export const SAVE_BOOK = gql`
+    mutation addNewBook($input: newBook) {
+        saveBook(input: $input) {
+            _id
+            username
+        }
     }
-  }
-`;
+`
 
 export const ADD_USER = gql`
-  mutation addUser($username: String!, $email: String!, $password: String!) {
-    addUser(username: $username, email: $email, password: $password) {
-      token
-      user {
-        _id
-        username
-        email
-      }
+    mutation addNewUser($username: String!, $email: String!, $password: String!) {
+        addUser(username: $username, email: $email, password: $password) {
+        token
+        user {
+            _id
+            username
+        }
+        }
     }
-  }
-`;
+`
 
-export const SAVE_BOOK = gql`
-  mutation saveBook($input: BookInput!) {
-    saveBook(input: $input) {
-      _id
-      username
-      email
-      bookCount
-      savedBooks {
-        bookId
-        authors
-        description
-        title
-        image
-        link
-      }
+export const LOGIN_USER = gql`
+    mutation login($email: String!, $password: String!) {
+        login(email: $email, password: $password) {
+        token
+        user {
+            _id
+            username
+            }
+        }
     }
-  }
-`;
+`
 
-export const REMOVE_BOOK = gql`
-  mutation removeBook($bookId: String!) {
+export const REMOVE_BOOK = gql`  
+mutation removeSavedBook($bookId: String!) {
     removeBook(bookId: $bookId) {
-      _id
-      username
-      email
-      bookCount
-      savedBooks {
-        bookId
-        authors
-        description
-        title
-        image
-        link
-      }
+    _id
+    username
     }
-  }
-`;
+}
+`

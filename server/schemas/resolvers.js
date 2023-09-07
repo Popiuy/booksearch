@@ -1,49 +1,64 @@
 const { User, Book } = require('../models/');
+const {signToken, AuthenticationError} = require('../utils/auth');
 
 const resolvers = {
     Query: {
-        me: async (parent, args, context) => {
-            // Implement your logic to fetch the authenticated user
-            // You can use the context token to verify authentication
-        },
-        books: async () => {
-            return await Book.find({});
-        },
-        book: async (parent, args) => {
-            return await Book.findById(args.id)
+        me: async (parent, args) => {
+            return await User.findById(args.id)
         },
         users: async () => {
-            return await User.find({});
-        },
-        user: async (parent, args) => {
-            return await User.findById(args.id)
+            return await User.find();
         }
     },
     Mutation: {
-        login: async (parent, args) => {
-            // Implement your login logic here
-          },
-        addUser: async (parent, args) => {
-            // dont forget to destructure args
+        addUser: async (parent, {username, email, password}) => {
+            try {
+                const user = await User.create({username, email, password});
+                const token = signToken(user);
+                
+                return { token, user }
+
+            } catch (err) {
+                console.log(err);
+            }
         },
-        saveBook: async (parent, args) => {
-            // dont forget to destructure args
+        login: async ( parent, { username, password }) => {
+            const user = await User.findOne({username});
+            
+            if (!user) {
+                throw AuthenticationError;
+            }
+
+            const correctPw = await user.isCorrectPassword(password);
+
+            if (!correctPw){
+                throw AuthenticationError;
+            }
+
+            const token = signToken(user);
+
+            return { token, user };
         },
-        removeBook: async (parent, args, context) => {
-            // Implement logic to remove a book from the user's savedBooks array
-          },
-      
-    },
-    User: {
-        // Define how to resolve fields in the User type
-        // Example: bookCount and savedBooks
-      },
-      Book: {
-        // Define how to resolve fields in the Book type
-      },
-      Auth: {
-        // Define how to resolve fields in the Auth type
-      },
+        saveBook: async (parent, { bookId, title, authors, description, image }, context) => {
+            // dont forget to destructure args
+            console.log(context.req.user)
+            // if (!context.user) {
+            //     throw AuthenticationError;
+            // }
+            return await User.findOneAndUpdate(
+                { _id: context.user._id },
+                { $addToSet: { savedBooks: bookToSave.bookId }},
+                { new: true }
+            )
+        },
+        unsaveBook: async (parent, {}, context) => {
+            const book = await Book.findById();
+
+            return User.findOneAndUpdate(
+                {$pull: {savedbooks: book}}
+            )
+        }
+    }
 }
 
 module.exports = resolvers;
